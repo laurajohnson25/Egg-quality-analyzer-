@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Egg Quality Analyzer</title>
+<style>
+body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+img { max-width: 300px; margin-top: 20px; }
+#result { margin-top: 20px; font-size: 1.2em; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Egg Quality Analyzer</h1>
+<input type="file" accept="image/*" onchange="previewImage(event)">
+<br>
+<img id="preview" src="#" alt="Egg preview will appear here" style="display:none;">
+<div id="result">Prediction: Waiting for input...</div>
+
+<script type="module">
+let model, maxPredictions;
+
+// Load Teachable Machine model
+async function loadModel() {
+const URL = "https://teachablemachine.withgoogle.com/models/YOUR_MODEL_ID/"; // Replace with your model URL
+const modelURL = URL + "model.json";
+const metadataURL = URL + "metadata.json";
+
+model = await tmImage.load(modelURL, metadataURL);
+maxPredictions = model.getTotalClasses();
+}
+
+loadModel();
+
+window.previewImage = async function(event) {
+const file = event.target.files[0];
+const imgElement = document.getElementById('preview');
+imgElement.src = URL.createObjectURL(file);
+imgElement.onload = () => URL.revokeObjectURL(imgElement.src);
+imgElement.style.display = 'block';
+
+// Wait a bit for the image to render
+setTimeout(async () => {
+const prediction = await model.predict(imgElement);
+prediction.sort((a, b) => b.probability - a.probability);
+document.getElementById('result').innerText =
+`Prediction: ${prediction[0].className} (${(prediction[0].probability * 100).toFixed(2)}%)`;
+}, 500);
+}
+</script>
+
+<!-- Teachable Machine Image Library -->
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+</body>
+</html>
